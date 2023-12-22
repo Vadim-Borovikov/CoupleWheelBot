@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoupleWheelBot", "CoupleWheelBot\CoupleWheelBot.csproj", "{C28949C6-07BA-4EEB-8E42-3D7E87384F99}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoupleWheelBot.Web", "CoupleWheelBot.Web\CoupleWheelBot.Web.csproj", "{142CA07C-496D-4CCE-B29A-4BA5F0A9438A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C28949C6-07BA-4EEB-8E42-3D7E87384F99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C28949C6-07BA-4EEB-8E42-3D7E87384F99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C28949C6-07BA-4EEB-8E42-3D7E87384F99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C28949C6-07BA-4EEB-8E42-3D7E87384F99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{142CA07C-496D-4CCE-B29A-4BA5F0A9438A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{142CA07C-496D-4CCE-B29A-4BA5F0A9438A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{142CA07C-496D-4CCE-B29A-4BA5F0A9438A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{142CA07C-496D-4CCE-B29A-4BA5F0A9438A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B59828D9-37E6-4823-9817-4FAEE8F1B102}
+	EndGlobalSection
+EndGlobal
