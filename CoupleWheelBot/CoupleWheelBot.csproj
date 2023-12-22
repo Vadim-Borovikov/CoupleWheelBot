@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AbstractBot" Version="71.0.0-b79" />
+    <PackageReference Include="AbstractBot" Version="71.0.0-b80" />
+    <PackageReference Include="ceTe.DynamicPDF.Rasterizer.NET" Version="4.4.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.1" />
   </ItemGroup>
 
 </Project>
