@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="AbstractBot" Version="71.0.0-b80" />
-    <PackageReference Include="ceTe.DynamicPDF.Rasterizer.NET" Version="4.4.0" />
+    <PackageReference Include="PDFtoImage" Version="2.4.3" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.1" />
   </ItemGroup>
 

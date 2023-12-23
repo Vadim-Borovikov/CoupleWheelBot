@@ -46,6 +46,6 @@ internal sealed class Manager
     }
 
     private const string PdfMime = "application/pdf";
-    private const int Pad = 10;
-    private const int BottomExtraPad = 40;
+    private const int Pad = 30;
+    private const int BottomExtraPad = 130;
 }

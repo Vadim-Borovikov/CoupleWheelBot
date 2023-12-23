@@ -1,4 +1,5 @@
-﻿using ceTe.DynamicPDF.Rasterizer;
+﻿using System.Diagnostics.CodeAnalysis;
+using PDFtoImage;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.PixelFormats;
@@ -7,15 +8,13 @@ namespace CoupleWheelBot.ImageProcessing;
 
 internal sealed class ImageProcessor : IImageProcessor
 {
-    public byte[]? ConvertToPng(byte[] pdf)
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
+    public byte[] ConvertToPng(byte[] pdf)
     {
-        using (InputPdf inputPdf = new(pdf))
+        using (MemoryStream stream = new())
         {
-            using (PdfRasterizer rasterizer = new(inputPdf))
-            {
-                byte[][]? table = rasterizer.Draw(ImageFormat.Png, ImageSize);
-                return table is null || (table.Length == 0) ? null : table[0];
-            }
+            Conversion.SavePng(stream, pdf);
+            return stream.ToArray();
         }
     }
 
@@ -23,13 +22,12 @@ internal sealed class ImageProcessor : IImageProcessor
     {
         using (Image image = Image.Load(png))
         {
-            image.Mutate(i => i.Crop(ContentRectangle)
-                               .EntropyCrop());
+            image.Mutate(i => i.EntropyCrop());
 
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream stream = new())
             {
-                image.SaveAsPng(memoryStream);
-                return memoryStream.ToArray();
+                image.SaveAsPng(stream);
+                return stream.ToArray();
             }
         }
     }
@@ -39,20 +37,16 @@ internal sealed class ImageProcessor : IImageProcessor
         using (Image content = Image.Load(png))
         {
             // Create an image with white background
-            Image<Rgb24> image =
-                new(content.Width + left + right, content.Height + top + bottom, SixLabors.ImageSharp.Color.White);
+            Image<Rgb24> image = new(content.Width + left + right, content.Height + top + bottom, Color.White);
             Point topLeft = new(left, top);
             // ReSharper disable once AccessToDisposedClosure
             image.Mutate(i => i.DrawImage(content, topLeft, 1));
 
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream stream = new())
             {
-                image.SaveAsPng(memoryStream);
-                return memoryStream.ToArray();
+                image.SaveAsPng(stream);
+                return stream.ToArray();
             }
         }
     }
-
-    private static readonly ImageSize ImageSize = ImageSize.Dpi96;
-    private static readonly Rectangle ContentRectangle = new(0, 60, 600, 220);
 }
