@@ -17,6 +17,12 @@ public class Texts : AbstractBot.Configs.Texts
     public MessageTemplate NameQuestion { get; init; } = null!;
 
     [Required]
+    public MessageTemplate QuestionsStart { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate InviteError { get; init; } = null!;
+
+    [Required]
     public MessageTemplate QuestionsEnded { get; init; } = null!;
 
     [Required]

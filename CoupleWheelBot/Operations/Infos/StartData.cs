@@ -4,5 +4,16 @@ namespace CoupleWheelBot.Operations.Infos;
 
 public class StartData : ICommandData<StartData>
 {
-    public static StartData? From(string[] parameters) => throw new NotImplementedException();
+    internal readonly Guid Guid;
+
+    private StartData(Guid guid) => Guid = guid;
+
+    public static StartData? From(string[] parameters)
+    {
+        return parameters.Length switch
+        {
+            1 => new StartData(Guid.Parse(parameters.Single())),
+            _ => null
+        };
+    }
 }

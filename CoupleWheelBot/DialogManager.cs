@@ -1,6 +1,7 @@
 ﻿using AbstractBot;
 using AbstractBot.Configs;
-using CoupleWheelBot.Contexts;
+using CoupleWheelBot.Save;
+using GryphonUtilities.Extensions;
 using MoreLinq.Extensions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -9,21 +10,29 @@ namespace CoupleWheelBot;
 
 internal sealed class DialogManager
 {
-    public DialogManager(Bot bot) => _bot = bot;
+    public DialogManager(Bot bot, Dictionary<Guid, CoupleCondition> coupleConditions)
+    {
+        _bot = bot;
+        _coupleConditions = coupleConditions;
+    }
 
-    public Task NextStepAsync(Chat chat, long userId, Answer? context = null)
+    public async Task NextStepAsync(Chat chat, long userId, Guid? guid = null)
     {
         MessageTemplate messageTemplate;
         KeyboardProvider keyboardProvider = KeyboardProvider.Same;
-        if (context is null)
+        if (guid is null)
         {
-            messageTemplate = _bot.Config.Texts.NameQuestion;
-            context = new Answer(userId, _bot.Config.QuestionsNumber);
-            _bot.UpdateContextFor(userId, context);
+            guid = _bot.CreateCoupleConditionFor(userId);
+
+            await _bot.Config.Texts.QuestionsStart.SendAsync(_bot, chat);
+
+            string link = string.Format(LinkFormat, _bot.User.Denull().Username, guid);
+            await _bot.SendTextMessageAsync(chat, link);
         }
-        else
+
+        if (_coupleConditions[guid.Value].Opinions.ContainsKey(userId))
         {
-            int index = context.CoupleCondition.Views[userId].Estimates.IndexOf(null);
+            int index = _coupleConditions[guid.Value].Opinions[userId].Estimates.IndexOf(null);
             if (index == -1)
             {
                 messageTemplate = _bot.Config.Texts.QuestionsEnded;
@@ -34,20 +43,24 @@ internal sealed class DialogManager
                 keyboardProvider = GetEstimateKeyboard((byte) index);
             }
         }
+        else
+        {
+            messageTemplate = _bot.Config.Texts.NameQuestion;
+        }
 
-        return messageTemplate.SendAsync(_bot, chat, keyboardProvider);
+        await messageTemplate.SendAsync(_bot, chat, keyboardProvider);
     }
 
-    public void AcceptName(long userId, Answer context, string name)
+    public void AcceptName(long userId, Guid guid, string name)
     {
-        context.CoupleCondition.Views[userId].UserName = name;
-        _bot.UpdateContextFor(userId, context);
+        _coupleConditions[guid].Opinions[userId] = new PartnerOpinion(name, _bot.Config.QuestionsNumber);
+        _bot.Save();
     }
 
-    public void AcceptEstimate(long userId, Answer context, byte index, byte estimate)
+    public void AcceptEstimate(long userId, Guid guid, byte index, byte estimate)
     {
-        context.CoupleCondition.Views[userId].Estimates[index] = estimate;
-        _bot.UpdateContextFor(userId, context);
+        _coupleConditions[guid].Opinions[userId].Estimates[index] = estimate;
+        _bot.Save();
     }
 
     private static InlineKeyboardMarkup GetEstimateKeyboard(byte index)
@@ -62,12 +75,14 @@ internal sealed class DialogManager
     {
         return new InlineKeyboardButton(estimate.ToString())
         {
-            CallbackData = $"{nameof(AcceptEstimate)}{index}{Bot.QuerySeparator}{estimate}"
+            CallbackData = $"{nameof(Operations.AcceptEstimate)}{index}{Bot.QuerySeparator}{estimate}"
         };
     }
 
     private readonly Bot _bot;
+    private readonly Dictionary<Guid, CoupleCondition> _coupleConditions;
 
     private const int ButtonsTotal = 10;
     private const int ButtonsPerRaw = 5;
+    private const string LinkFormat = "https://t.me/{0}?start={1}";
 }

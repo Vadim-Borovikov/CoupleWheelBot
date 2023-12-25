@@ -36,8 +36,8 @@ internal sealed class AcceptName : Operation<AcceptNameInfo>
 
     protected override Task ExecuteAsync(AcceptNameInfo info, Message message, User sender)
     {
-        _manager.AcceptName(sender.Id, info.Context, info.Text);
-        return _manager.NextStepAsync(message.Chat, sender.Id, info.Context);
+        _manager.AcceptName(sender.Id, info.Context.Guid, info.Text);
+        return _manager.NextStepAsync(message.Chat, sender.Id, info.Context.Guid);
     }
 
     private readonly DialogManager _manager;

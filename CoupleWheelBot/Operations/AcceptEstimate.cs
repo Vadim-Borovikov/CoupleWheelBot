@@ -25,8 +25,8 @@ internal sealed class AcceptEstimate : Operation<AcceptEstimateInfo>
 
     protected override Task ExecuteAsync(AcceptEstimateInfo info, Message message, User sender)
     {
-        _manager.AcceptEstimate(sender.Id, info.Context, info.Index, info.Estimate);
-        return _manager.NextStepAsync(message.Chat, sender.Id, info.Context);
+        _manager.AcceptEstimate(sender.Id, info.Context.Guid, info.Index, info.Estimate);
+        return _manager.NextStepAsync(message.Chat, sender.Id, info.Context.Guid);
     }
 
     private readonly DialogManager _manager;
