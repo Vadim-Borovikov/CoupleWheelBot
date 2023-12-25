@@ -2,7 +2,7 @@
 
 namespace CoupleWheelBot.Operations.Infos;
 
-public class StartData : ICommandData<StartData>
+public sealed class StartData : ICommandData<StartData>
 {
     internal readonly Guid Guid;
 

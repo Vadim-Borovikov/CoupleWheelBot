@@ -6,7 +6,7 @@ internal sealed class AcceptEstimateInfo
     public readonly byte Index;
     public readonly byte Estimate;
 
-    public AcceptEstimateInfo(Contexts.Answer context, byte index, byte estimate)
+    private AcceptEstimateInfo(Contexts.Answer context, byte index, byte estimate)
     {
         Context = context;
         Index = index;

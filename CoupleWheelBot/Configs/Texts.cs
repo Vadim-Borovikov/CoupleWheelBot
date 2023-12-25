@@ -20,14 +20,20 @@ public class Texts : AbstractBot.Configs.Texts
     public MessageTemplate QuestionsStart { get; init; } = null!;
 
     [Required]
+    public MessageTemplate InviteMessageFormat { get; init; } = null!;
+
+    [Required]
     public MessageTemplate InviteError { get; init; } = null!;
 
     [Required]
-    public MessageTemplate QuestionsEnded { get; init; } = null!;
+    public MessageTemplate DownloadError { get; init; } = null!;
 
     [Required]
     public List<MessageTemplate> CoupleQuestions { get; init; } = null!;
 
     [Required]
-    public MessageTemplate WaitingForPartner { get; init; } = null;
+    public MessageTemplate WaitingForPartner { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate FinalMessage { get; init; } = null!;
 }

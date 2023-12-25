@@ -17,5 +17,9 @@ public class Config : ConfigWithSheets<Texts>
     [MinLength(1)]
     public string GoogleTitle { get; init; } = null!;
 
+    [Required]
+    [MinLength(1)]
+    public string GoogleRange { get; init; } = null!;
+
     public byte QuestionsNumber => (byte) Texts.CoupleQuestions.Count;
 }

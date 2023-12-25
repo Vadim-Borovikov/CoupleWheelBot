@@ -8,6 +8,7 @@ using CoupleWheelBot.Operations;
 using CoupleWheelBot.Operations.Commands;
 using CoupleWheelBot.Operations.Infos;
 using CoupleWheelBot.Save;
+using GoogleSheetsManager.Documents;
 using Telegram.Bot.Types;
 
 namespace CoupleWheelBot;
@@ -18,7 +19,7 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
     {
         IImageProcessor imageProcessor = new ImageProcessor();
         _dialogManager = new DialogManager(this, SaveManager.Data.CoupleConditions);
-        // Manager manager = new(this, DocumentsManager, imageProcessor);
+        _fileManager = new FileManager(this, DocumentsManager, imageProcessor);
 
         AnswerCommand answerCommand = new(this, _dialogManager);
 
@@ -27,6 +28,11 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         Operations.Add(new AcceptEstimate(this, _dialogManager));
 
         Start.Format($"/{answerCommand.BotCommand.Command}");
+
+
+        GoogleSheetsManager.Documents.Document document = DocumentsManager.GetOrAdd(Config.GoogleSheetId);
+        Sheet sheet = document.GetOrAddSheet(Config.GoogleTitle);
+        _sheetManager = new SheetManager(Config.GoogleRange, sheet);
     }
 
     protected override void AfterLoad()
@@ -66,7 +72,7 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         return _dialogManager.NextStepAsync(message.Chat, sender.Id, context.Guid);
     }
 
-    public Guid CreateCoupleConditionFor(long userId)
+    internal Guid CreateCoupleConditionFor(long userId)
     {
         Guid guid = Guid.NewGuid();
         SaveManager.Data.CoupleConditions[guid] = new CoupleCondition();
@@ -77,15 +83,24 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         return guid;
     }
 
-    public void UpdateContextFor(long id, Context context)
+    internal async Task OnConditionReadyAsync(Guid guid)
+    {
+        await _sheetManager.UploadDataAsync(SaveManager.Data.CoupleConditions[guid]);
+        byte[]? png = await _fileManager.DownloadAsync();
+        await _dialogManager.FinalizeCommunicationAsync(guid, png);
+    }
+
+    internal void Save() => SaveManager.Save();
+
+    private void UpdateContextFor(long id, Context context)
     {
         Contexts[id] = context;
         SaveManager.Save();
     }
 
-    public void Save() => SaveManager.Save();
-
     private readonly DialogManager _dialogManager;
+    private readonly SheetManager _sheetManager;
+    private readonly FileManager _fileManager;
 
     internal const string QuerySeparator = " ";
 }

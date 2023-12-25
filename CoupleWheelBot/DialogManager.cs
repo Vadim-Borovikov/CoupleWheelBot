@@ -4,6 +4,7 @@ using CoupleWheelBot.Save;
 using GryphonUtilities.Extensions;
 using MoreLinq.Extensions;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace CoupleWheelBot;
@@ -18,6 +19,8 @@ internal sealed class DialogManager
 
     public async Task NextStepAsync(Chat chat, long userId, Guid? guid = null)
     {
+        // guid = new Guid("8254fc46-bab2-4068-af72-e136a26f871b");
+
         MessageTemplate messageTemplate;
         KeyboardProvider keyboardProvider = KeyboardProvider.Same;
         if (guid is null)
@@ -27,7 +30,7 @@ internal sealed class DialogManager
             await _bot.Config.Texts.QuestionsStart.SendAsync(_bot, chat);
 
             string link = string.Format(LinkFormat, _bot.User.Denull().Username, guid);
-            await _bot.SendTextMessageAsync(chat, link);
+            await _bot.Config.Texts.InviteMessageFormat.Format(link).SendAsync(_bot, chat);
         }
 
         if (_coupleConditions[guid.Value].Opinions.ContainsKey(userId))
@@ -37,12 +40,11 @@ internal sealed class DialogManager
             {
                 if (_coupleConditions[guid.Value].Done)
                 {
-                    messageTemplate = _bot.Config.Texts.QuestionsEnded;
+                    await _bot.OnConditionReadyAsync(guid.Value);
+                    return;
                 }
-                else
-                {
-                    messageTemplate = _bot.Config.Texts.WaitingForPartner;
-                }
+
+                messageTemplate = _bot.Config.Texts.WaitingForPartner;
             }
             else
             {
@@ -68,6 +70,39 @@ internal sealed class DialogManager
     {
         _coupleConditions[guid].Opinions[userId].Estimates[index] = estimate;
         _bot.Save();
+    }
+
+    public async Task FinalizeCommunicationAsync(Guid guid, byte[]? png)
+    {
+        IEnumerable<Chat> chats = _coupleConditions[guid].Opinions.Keys.Select(GetPrivateChat);
+        foreach (Chat chat in chats)
+        {
+            await SendPngAsync(chat, png);
+            await _bot.Config.Texts.FinalMessage.SendAsync(_bot, chat);
+        }
+    }
+
+    private Task SendPngAsync(Chat chat, byte[]? png)
+    {
+        if (png is null)
+        {
+            return _bot.Config.Texts.DownloadError.SendAsync(_bot, chat);
+        }
+
+        using (MemoryStream stream = new(png))
+        {
+            InputFile photo = InputFile.FromStream(stream);
+            return _bot.SendPhotoAsync(chat, photo);
+        }
+    }
+
+    private static Chat GetPrivateChat(long userId)
+    {
+        return new Chat
+        {
+            Id = userId,
+            Type = ChatType.Private
+        };
     }
 
     private static InlineKeyboardMarkup GetEstimateKeyboard(byte index)
