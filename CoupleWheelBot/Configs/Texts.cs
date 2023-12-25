@@ -27,4 +27,7 @@ public class Texts : AbstractBot.Configs.Texts
 
     [Required]
     public List<MessageTemplate> CoupleQuestions { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate WaitingForPartner { get; init; } = null;
 }

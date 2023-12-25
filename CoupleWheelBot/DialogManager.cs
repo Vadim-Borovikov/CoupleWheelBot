@@ -32,10 +32,17 @@ internal sealed class DialogManager
 
         if (_coupleConditions[guid.Value].Opinions.ContainsKey(userId))
         {
-            int index = _coupleConditions[guid.Value].Opinions[userId].Estimates.IndexOf(null);
+            int index = _coupleConditions[guid.Value].Opinions[userId].NextIndex;
             if (index == -1)
             {
-                messageTemplate = _bot.Config.Texts.QuestionsEnded;
+                if (_coupleConditions[guid.Value].Done)
+                {
+                    messageTemplate = _bot.Config.Texts.QuestionsEnded;
+                }
+                else
+                {
+                    messageTemplate = _bot.Config.Texts.WaitingForPartner;
+                }
             }
             else
             {
