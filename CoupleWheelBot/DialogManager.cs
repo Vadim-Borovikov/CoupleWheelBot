@@ -1,6 +1,6 @@
 ﻿using AbstractBot;
 using AbstractBot.Configs;
-using CoupleWheelBot.Save;
+using CoupleWheelBot.Contexts;
 using GryphonUtilities.Extensions;
 using MoreLinq.Extensions;
 using Telegram.Bot.Types;
@@ -11,36 +11,38 @@ namespace CoupleWheelBot;
 
 internal sealed class DialogManager
 {
-    public DialogManager(Bot bot, Dictionary<Guid, CoupleCondition> coupleConditions)
+    public DialogManager(Bot bot, CouplesManager couplesManager)
     {
         _bot = bot;
-        _coupleConditions = coupleConditions;
+        _couplesManager = couplesManager;
     }
 
-    public async Task NextStepAsync(Chat chat, long userId, Guid? guid = null)
+    public async Task NextStepAsync(Chat chat, long userId, Partner? context = null)
     {
-        // guid = new Guid("8254fc46-bab2-4068-af72-e136a26f871b");
-
         MessageTemplate messageTemplate;
         KeyboardProvider keyboardProvider = KeyboardProvider.Same;
-        if (guid is null)
+        if (context is null)
         {
-            guid = _bot.CreateCoupleConditionFor(userId);
+            context = _bot.CreatePartnerContext(userId);
 
             await _bot.Config.Texts.QuestionsStart.SendAsync(_bot, chat);
 
-            string link = string.Format(LinkFormat, _bot.User.Denull().Username, guid);
+            string link = string.Format(LinkFormat, _bot.User.Denull().Username, context.CoupleId);
             await _bot.Config.Texts.InviteMessageFormat.Format(link).SendAsync(_bot, chat);
         }
 
-        if (_coupleConditions[guid.Value].Opinions.ContainsKey(userId))
+        if (string.IsNullOrWhiteSpace(context.UserName))
         {
-            int index = _coupleConditions[guid.Value].Opinions[userId].NextIndex;
+            messageTemplate = _bot.Config.Texts.NameQuestion;
+        }
+        else
+        {
+            int index = context.NextIndex;
             if (index == -1)
             {
-                if (_coupleConditions[guid.Value].Done)
+                if (_couplesManager.IsDone(context.CoupleId))
                 {
-                    await _bot.OnConditionReadyAsync(guid.Value);
+                    await _bot.OnConditionReadyAsync(context.CoupleId);
                     return;
                 }
 
@@ -52,29 +54,25 @@ internal sealed class DialogManager
                 keyboardProvider = GetEstimateKeyboard((byte) index);
             }
         }
-        else
-        {
-            messageTemplate = _bot.Config.Texts.NameQuestion;
-        }
 
         await messageTemplate.SendAsync(_bot, chat, keyboardProvider);
     }
 
-    public void AcceptName(long userId, Guid guid, string name)
+    public void AcceptName(Partner context, string name)
     {
-        _coupleConditions[guid].Opinions[userId] = new PartnerOpinion(name, _bot.Config.QuestionsNumber);
+        context.UserName = name;
         _bot.Save();
     }
 
-    public void AcceptEstimate(long userId, Guid guid, byte index, byte estimate)
+    public void AcceptEstimate(Partner context, byte index, byte opinion)
     {
-        _coupleConditions[guid].Opinions[userId].Estimates[index] = estimate;
+        context.Opinions[index] = opinion;
         _bot.Save();
     }
 
     public async Task FinalizeCommunicationAsync(Guid guid, byte[]? png)
     {
-        IEnumerable<Chat> chats = _coupleConditions[guid].Opinions.Keys.Select(GetPrivateChat);
+        IEnumerable<Chat> chats = _couplesManager.GetUserIdsWith(guid).Select(GetPrivateChat);
         foreach (Chat chat in chats)
         {
             await SendPngAsync(chat, png);
@@ -117,12 +115,14 @@ internal sealed class DialogManager
     {
         return new InlineKeyboardButton(estimate.ToString())
         {
-            CallbackData = $"{nameof(Operations.AcceptEstimate)}{index}{Bot.QuerySeparator}{estimate}"
+            CallbackData = $"{nameof(Operations.AcceptOpinion)}{index}{Bot.QuerySeparator}{estimate}"
         };
     }
 
     private readonly Bot _bot;
-    private readonly Dictionary<Guid, CoupleCondition> _coupleConditions;
+
+    private readonly CouplesManager _couplesManager;
+    // private readonly Dictionary<Guid, CoupleCondition> _coupleConditions;
 
     private const int ButtonsTotal = 10;
     private const int ButtonsPerRaw = 5;

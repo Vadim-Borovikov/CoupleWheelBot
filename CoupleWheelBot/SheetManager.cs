@@ -1,4 +1,4 @@
-﻿using CoupleWheelBot.Save;
+﻿using CoupleWheelBot.Contexts;
 using GoogleSheetsManager.Documents;
 
 namespace CoupleWheelBot;
@@ -11,21 +11,21 @@ internal sealed class SheetManager
         _sheet = sheet;
     }
 
-    public async Task UploadDataAsync(CoupleCondition condition)
+    public async Task UploadDataAsync(IEnumerable<Partner> opinions)
     {
-        List<IList<object>> values = condition.Opinions.Values.Select(GetData).ToList();
+        List<IList<object>> values = opinions.Select(GetData).ToList();
         values = Transpose(values);
         await _sheet.SaveRawAsync(_range, values);
     }
 
-    private static IList<object> GetData(PartnerOpinion opinion)
+    private static IList<object> GetData(Partner opinion)
     {
         List<object> result = new()
         {
             opinion.UserName,
             ""
         };
-        result.AddRange(opinion.Estimates.Select(e => (object) (e ?? 0)));
+        result.AddRange(opinion.Opinions.Select(e => (object) (e ?? 0)));
         return result;
     }
 

@@ -1,5 +1,6 @@
 ﻿using AbstractBot.Bots;
 using AbstractBot.Operations;
+using CoupleWheelBot.Contexts;
 using CoupleWheelBot.Operations.Infos;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -14,8 +15,8 @@ internal sealed class AcceptName : Operation<AcceptNameInfo>
     {
         info = null;
 
-        Contexts.Answer? context = Bot.TryGetContext<Contexts.Answer>(sender.Id);
-        if (context is null)
+        Partner? context = Bot.TryGetContext<Partner>(sender.Id);
+        if (context is null || !string.IsNullOrWhiteSpace(context.UserName))
         {
             return false;
         }
@@ -36,8 +37,8 @@ internal sealed class AcceptName : Operation<AcceptNameInfo>
 
     protected override Task ExecuteAsync(AcceptNameInfo info, Message message, User sender)
     {
-        _manager.AcceptName(sender.Id, info.Context.Guid, info.Text);
-        return _manager.NextStepAsync(message.Chat, sender.Id, info.Context.Guid);
+        _manager.AcceptName(info.Context, info.Text);
+        return _manager.NextStepAsync(message.Chat, sender.Id, info.Context);
     }
 
     private readonly DialogManager _manager;

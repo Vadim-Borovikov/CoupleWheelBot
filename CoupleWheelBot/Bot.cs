@@ -17,15 +17,17 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
 {
     public Bot(Config config) : base(config)
     {
+        CouplesManager couplesManager = new(SaveManager.Data.PartnerContexts);
+
         IImageProcessor imageProcessor = new ImageProcessor();
-        _dialogManager = new DialogManager(this, SaveManager.Data.CoupleConditions);
+        _dialogManager = new DialogManager(this, couplesManager);
         _fileManager = new FileManager(this, DocumentsManager, imageProcessor);
 
         AnswerCommand answerCommand = new(this, _dialogManager);
 
         Operations.Add(answerCommand);
         Operations.Add(new AcceptName(this, _dialogManager));
-        Operations.Add(new AcceptEstimate(this, _dialogManager));
+        Operations.Add(new AcceptOpinion(this, _dialogManager));
 
         Start.Format($"/{answerCommand.BotCommand.Command}");
 
@@ -38,54 +40,47 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
     protected override void AfterLoad()
     {
         Contexts.Clear();
-        Contexts.AddAll(SaveManager.Data.AnswerContexts);
-    }
-
-    private void ClearUnattachedConditions()
-    {
-        SaveManager.Data.CoupleConditions =
-            SaveManager.Data.CoupleConditions
-                            .Where(p => SaveManager.Data.AnswerContexts.Values.Any(v => v.Guid == p.Key))
-                            .ToDictionary(p => p.Key, p => p.Value);
+        Contexts.AddAll(SaveManager.Data.PartnerContexts);
     }
 
     protected override void BeforeSave()
     {
-        SaveManager.Data.AnswerContexts = FilterContextsByValueType<Answer>();
-        ClearUnattachedConditions();
-    }
+        SaveManager.Data.PartnerContexts.Clear();
 
-    private Dictionary<long, T> FilterContextsByValueType<T>() where T : Context
-    {
-        return Contexts.FilterByValueType<long, Context, T>();
+        Dictionary<long, Partner> contexts = Contexts.FilterByValueType<long, Context, Partner>();
+        SaveManager.Data.PartnerContexts.AddAll(contexts);
     }
 
     protected override Task OnStartCommand(StartData info, Message message, User sender)
     {
-        if (!SaveManager.Data.CoupleConditions.ContainsKey(info.Guid))
+        if (SaveManager.Data.PartnerContexts.Values.All(c => c.CoupleId != info.CoupleId))
         {
             return Config.Texts.InviteError.SendAsync(this, message.Chat);
         }
 
-        Answer context = new() { Guid = info.Guid };
-        UpdateContextFor(sender.Id, context);
-        return _dialogManager.NextStepAsync(message.Chat, sender.Id, context.Guid);
+        Partner context = CreatePartnerContext(sender.Id, info.CoupleId);
+        return _dialogManager.NextStepAsync(message.Chat, sender.Id, context);
     }
 
-    internal Guid CreateCoupleConditionFor(long userId)
+    internal Partner CreatePartnerContext(long userId, Guid? coupleId = null)
     {
-        Guid guid = Guid.NewGuid();
-        SaveManager.Data.CoupleConditions[guid] = new CoupleCondition();
-
-        Answer context = new() { Guid = guid };
+        Partner context = new()
+        {
+            CoupleId = coupleId ?? Guid.NewGuid(),
+            IsInitiator = coupleId is null,
+            Opinions = Enumerable.Repeat((byte?) null, Config.QuestionsNumber).ToList()
+        };
         UpdateContextFor(userId, context);
-
-        return guid;
+        return context;
     }
 
     internal async Task OnConditionReadyAsync(Guid guid)
     {
-        await _sheetManager.UploadDataAsync(SaveManager.Data.CoupleConditions[guid]);
+        await _sheetManager.UploadDataAsync(SaveManager.Data
+                                                       .PartnerContexts
+                                                       .Values
+                                                       .Where(c => c.CoupleId == guid)
+                                                       .OrderByDescending(c => c.IsInitiator));
         byte[]? png = await _fileManager.DownloadAsync();
         await _dialogManager.FinalizeCommunicationAsync(guid, png);
     }

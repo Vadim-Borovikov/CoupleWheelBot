@@ -7,8 +7,5 @@ namespace CoupleWheelBot.Save;
 public sealed class Data : SaveData
 {
     [UsedImplicitly]
-    public Dictionary<long, Answer> AnswerContexts { get; set; } = new();
-
-    [UsedImplicitly]
-    public Dictionary<Guid, CoupleCondition> CoupleConditions { get; set; } = new();
+    public Dictionary<long, Partner> PartnerContexts { get; set; } = new();
 }
