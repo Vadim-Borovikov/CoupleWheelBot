@@ -366,3 +366,5 @@ FodyWeavers.xsd
 /CoupleWheelBot.Web/Properties/launchSettings.json
 /NuGet.Config
 /CoupleWheelBot.Web/save.json
+/CoupleWheelBot.Web/appsettings.Staging.json
+/CoupleWheelBot.Web/Properties/ServiceDependencies/Couple-Wheel-Bot - Azure/profile.arm.json
