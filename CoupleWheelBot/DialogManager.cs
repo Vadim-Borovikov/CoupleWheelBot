@@ -78,7 +78,7 @@ internal sealed class DialogManager
         _bot.Save();
     }
 
-    public async Task FinalizeCommunicationAsync(Guid guid, byte[]? tablePng, byte[] chartPng)
+    public async Task FinalizeCommunicationAsync(Guid guid, byte[]? tablePng, byte[]? chartPng)
     {
         IEnumerable<Chat> chats = _couplesManager.GetUserIdsWith(guid).Select(GetPrivateChat);
         foreach (Chat chat in chats)

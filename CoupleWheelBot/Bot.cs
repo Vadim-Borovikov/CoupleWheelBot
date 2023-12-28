@@ -36,7 +36,7 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         Sheet sheet = document.GetOrAddSheet(Config.GoogleTitle);
         _sheetManager = new SheetManager(Config.GoogleRange, sheet);
 
-        _chartProvider = new ChartProvider(config.ChartConfigTemplate);
+        _chartProvider = new ChartProvider(config.ChartConfigTemplate, imageProcessor);
     }
 
     protected override void AfterLoad()
@@ -92,7 +92,7 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
             data.Add(contexts.Average(p => (decimal) p.Opinions[i]));
         }
 
-        byte[] chartPng = _chartProvider.GetChart(data, Config.Texts.CoupleQuestions.Select(q => q.Title));
+        byte[]? chartPng = _chartProvider.GetChart(data, Config.Texts.CoupleQuestions.Select(q => q.Title));
         await _dialogManager.FinalizeCommunicationAsync(guid, tablePng, chartPng);
     }
 

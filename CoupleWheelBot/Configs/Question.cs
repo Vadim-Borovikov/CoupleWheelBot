@@ -10,7 +10,7 @@ namespace CoupleWheelBot.Configs;
 public class Question
 {
     [Required]
-    public string Title { get; init; } = null!;
+    public List<string> Title { get; init; } = null!;
 
     [Required]
     public string Description { get; init; } = null!;
@@ -21,5 +21,8 @@ public class Question
     [Required]
     public string High { get; init; } = null!;
 
-    public MessageTemplate GetMessageTemplate(MessageTemplate format) => format.Format(Title, Description, Low, High);
+    public MessageTemplate GetMessageTemplate(MessageTemplate format)
+    {
+        return format.Format(string.Join(' ', Title), Description, Low, High);
+    }
 }
