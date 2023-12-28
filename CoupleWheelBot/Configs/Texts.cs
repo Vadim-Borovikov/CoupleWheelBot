@@ -29,7 +29,10 @@ public class Texts : AbstractBot.Configs.Texts
     public MessageTemplate DownloadError { get; init; } = null!;
 
     [Required]
-    public List<MessageTemplate> CoupleQuestions { get; init; } = null!;
+    public MessageTemplate CoupleQuestionFormat { get; init; } = null!;
+
+    [Required]
+    public List<Question> CoupleQuestions { get; init; } = null!;
 
     [Required]
     public MessageTemplate WaitingForPartner { get; init; } = null!;

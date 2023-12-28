@@ -25,7 +25,7 @@ internal sealed class SheetManager
             opinion.UserName,
             ""
         };
-        result.AddRange(opinion.Opinions.Select(e => (object) (e ?? 0)));
+        result.AddRange(opinion.Opinions.Select(o => (object) o));
         return result;
     }
 

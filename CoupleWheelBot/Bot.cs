@@ -17,7 +17,7 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
 {
     public Bot(Config config) : base(config)
     {
-        CouplesManager couplesManager = new(SaveManager.Data.PartnerContexts);
+        CouplesManager couplesManager = new(SaveManager.Data.PartnerContexts, Config.QuestionsNumber);
 
         IImageProcessor imageProcessor = new ImageProcessor();
         _dialogManager = new DialogManager(this, couplesManager);
@@ -35,6 +35,8 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         GoogleSheetsManager.Documents.Document document = DocumentsManager.GetOrAdd(Config.GoogleSheetId);
         Sheet sheet = document.GetOrAddSheet(Config.GoogleTitle);
         _sheetManager = new SheetManager(Config.GoogleRange, sheet);
+
+        _chartProvider = new ChartProvider(config.ChartConfigTemplate);
     }
 
     protected override void AfterLoad()
@@ -68,7 +70,7 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         {
             CoupleId = coupleId ?? Guid.NewGuid(),
             IsInitiator = coupleId is null,
-            Opinions = Enumerable.Repeat((byte?) null, Config.QuestionsNumber).ToList()
+            Opinions = new List<byte>()
         };
         UpdateContextFor(userId, context);
         return context;
@@ -76,13 +78,22 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
 
     internal async Task OnConditionReadyAsync(Guid guid)
     {
-        await _sheetManager.UploadDataAsync(SaveManager.Data
-                                                       .PartnerContexts
-                                                       .Values
-                                                       .Where(c => c.CoupleId == guid)
-                                                       .OrderByDescending(c => c.IsInitiator));
-        byte[]? png = await _fileManager.DownloadAsync();
-        await _dialogManager.FinalizeCommunicationAsync(guid, png);
+        List<Partner> contexts = SaveManager.Data.PartnerContexts.Values
+                                            .Where(c => c.CoupleId == guid)
+                                            .OrderByDescending(c => c.IsInitiator)
+                                            .ToList();
+
+        await _sheetManager.UploadDataAsync(contexts);
+        byte[]? tablePng = await _fileManager.DownloadAsync();
+
+        List<decimal> data = new();
+        for (int i = 0; i < Config.QuestionsNumber; ++i)
+        {
+            data.Add(contexts.Average(p => (decimal) p.Opinions[i]));
+        }
+
+        byte[] chartPng = _chartProvider.GetChart(data, Config.Texts.CoupleQuestions.Select(q => q.Title));
+        await _dialogManager.FinalizeCommunicationAsync(guid, tablePng, chartPng);
     }
 
     internal void Save() => SaveManager.Save();
@@ -96,6 +107,7 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
     private readonly DialogManager _dialogManager;
     private readonly SheetManager _sheetManager;
     private readonly FileManager _fileManager;
+    private readonly ChartProvider _chartProvider;
 
-    internal const string QuerySeparator = " ";
+    internal const string QuerySeparator = "_";
 }

@@ -37,8 +37,14 @@ internal sealed class DialogManager
         }
         else
         {
-            int index = context.NextIndex;
-            if (index == -1)
+            int answersAmount = context.Opinions.Count;
+            if (answersAmount < _bot.Config.Texts.CoupleQuestions.Count)
+            {
+                messageTemplate = _bot.Config.Texts.CoupleQuestions[answersAmount]
+                                      .GetMessageTemplate(_bot.Config.Texts.CoupleQuestionFormat);
+                keyboardProvider = GetEstimateKeyboard((byte) answersAmount);
+            }
+            else
             {
                 if (_couplesManager.IsDone(context.CoupleId))
                 {
@@ -47,11 +53,6 @@ internal sealed class DialogManager
                 }
 
                 messageTemplate = _bot.Config.Texts.WaitingForPartner;
-            }
-            else
-            {
-                messageTemplate = _bot.Config.Texts.CoupleQuestions[index];
-                keyboardProvider = GetEstimateKeyboard((byte) index);
             }
         }
 
@@ -66,16 +67,24 @@ internal sealed class DialogManager
 
     public void AcceptEstimate(Partner context, byte index, byte opinion)
     {
-        context.Opinions[index] = opinion;
+        if (context.Opinions.Count == index)
+        {
+            context.Opinions.Add(opinion);
+        }
+        else
+        {
+            context.Opinions[index] = opinion;
+        }
         _bot.Save();
     }
 
-    public async Task FinalizeCommunicationAsync(Guid guid, byte[]? png)
+    public async Task FinalizeCommunicationAsync(Guid guid, byte[]? tablePng, byte[] chartPng)
     {
         IEnumerable<Chat> chats = _couplesManager.GetUserIdsWith(guid).Select(GetPrivateChat);
         foreach (Chat chat in chats)
         {
-            await SendPngAsync(chat, png);
+            await SendPngAsync(chat, tablePng);
+            await SendPngAsync(chat, chartPng);
             await _bot.Config.Texts.FinalMessage.SendAsync(_bot, chat);
         }
     }
@@ -122,7 +131,6 @@ internal sealed class DialogManager
     private readonly Bot _bot;
 
     private readonly CouplesManager _couplesManager;
-    // private readonly Dictionary<Guid, CoupleCondition> _coupleConditions;
 
     private const int ButtonsTotal = 10;
     private const int ButtonsPerRaw = 5;

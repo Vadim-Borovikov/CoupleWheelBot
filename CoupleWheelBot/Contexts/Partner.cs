@@ -13,18 +13,14 @@ public sealed class Partner : Context
     [UsedImplicitly]
     public Guid CoupleId { get; init; }
     [UsedImplicitly]
-    public List<byte?> Opinions { get; init; } = null!;
-
-    internal int NextIndex => Opinions.IndexOf(null);
-
-    internal bool Done => Opinions.All(e => e.HasValue);
+    public List<byte> Opinions { get; init; } = null!;
 
     [UsedImplicitly]
     public Partner() { }
 
-    public Partner(string name, byte questionsNumber)
+    public Partner(string name)
     {
         UserName = name;
-        Opinions = Enumerable.Repeat((byte?)null, questionsNumber).ToList();
+        Opinions = new List<byte>();
     }
 }
