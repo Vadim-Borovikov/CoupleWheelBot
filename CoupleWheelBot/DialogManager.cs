@@ -81,12 +81,24 @@ internal sealed class DialogManager
         return true;
     }
 
-    public async Task ShowChartAsync(Guid guid, byte[]? chartPng)
+    public async Task ShowChartAsync(Guid guid, ChartProvider chartProvider, IEnumerable<decimal> data,
+        IEnumerable<IEnumerable<string>> labels)
     {
-        KeyboardProvider keyboardProvider = Bot.CreateSimpleKeyboard<ShowTable>(_bot.Config.Texts.TableButton);
-        foreach (Chat chat in _couplesManager.GetChatsWith(guid))
+        List<Chat> chats = _couplesManager.GetChatsWith(guid).ToList();
+        Dictionary<long, StatusMessage> statusMessages = new();
+
+        foreach (Chat chat in chats)
         {
             await _bot.Config.Texts.ChartPreMessage.SendAsync(_bot, chat);
+            statusMessages[chat.Id] = await StatusMessage.CreateAsync(_bot, chat, _bot.Config.Texts.ChartStatus,
+                _bot.Config.Texts.StatusMessageEndFormat);
+        }
+
+        byte[]? chartPng = chartProvider.GetChart(data, labels);
+        KeyboardProvider keyboardProvider = Bot.CreateSimpleKeyboard<ShowTable>(_bot.Config.Texts.TableButton);
+        foreach (Chat chat in chats)
+        {
+            await statusMessages[chat.Id].DisposeAsync();
             await SendPngAsync(chat, chartPng, keyboardProvider, _bot.Config.Texts.ChartCaption.EscapeIfNeeded());
         }
     }
@@ -94,7 +106,6 @@ internal sealed class DialogManager
     public async Task ShowTableAsync(Chat chat, byte[]? tablePng)
     {
         KeyboardProvider keyboardProvider = Bot.CreateSimpleKeyboard<Finalize>(_bot.Config.Texts.FinalizeButton);
-        await _bot.Config.Texts.TablePreMessage.SendAsync(_bot, chat);
         await SendPngAsync(chat, tablePng, keyboardProvider, _bot.Config.Texts.TableCaption.EscapeIfNeeded());
     }
 

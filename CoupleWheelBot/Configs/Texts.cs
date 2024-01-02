@@ -79,6 +79,12 @@ public class Texts : AbstractBot.Configs.Texts
     public MessageTemplate FinalMessageEnd { get; init; } = null!;
 
     [Required]
+    public MessageTemplate ChartStatus { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate TableStatus { get; init; } = null!;
+
+    [Required]
     public string PollButton { get; init; } = null!;
 
     [Required]

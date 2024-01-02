@@ -115,14 +115,20 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
             data.Add(SaveManager.Data.GetContextsWith(guid).Average(p => (decimal) p.Opinions[i]));
         }
 
-        byte[]? chartPng = _chartProvider.GetChart(data, Config.Texts.CoupleQuestions.Select(q => q.Title));
-        await _dialogManager.ShowChartAsync(guid, chartPng);
+        await _dialogManager.ShowChartAsync(guid, _chartProvider, data,
+            Config.Texts.CoupleQuestions.Select(q => q.Title));
     }
 
     internal async Task ShowTableAsync(Guid guid, Chat chat)
     {
-        await _sheetManager.UploadDataAsync(SaveManager.Data.GetContextsWith(guid));
-        byte[]? tablePng = await _fileManager.DownloadAsync();
+        await Config.Texts.TablePreMessage.SendAsync(this, chat);
+
+        byte[]? tablePng;
+        await using (await StatusMessage.CreateAsync(this, chat, Config.Texts.TableStatus))
+        {
+            await _sheetManager.UploadDataAsync(SaveManager.Data.GetContextsWith(guid));
+            tablePng = await _fileManager.DownloadAsync();
+        }
         await _dialogManager.ShowTableAsync(chat, tablePng);
     }
 
