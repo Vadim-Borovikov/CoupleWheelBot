@@ -5,16 +5,18 @@ using CoupleWheelBot.Contexts;
 using CoupleWheelBot.Extensions;
 using CoupleWheelBot.ImageProcessing;
 using CoupleWheelBot.Operations;
-using CoupleWheelBot.Operations.Commands;
 using CoupleWheelBot.Operations.Infos;
 using CoupleWheelBot.Save;
 using GoogleSheetsManager.Documents;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace CoupleWheelBot;
 
 public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
 {
+    protected override KeyboardProvider StartKeyboardProvider { get; }
+
     public Bot(Config config) : base(config)
     {
         CouplesManager couplesManager = new(SaveManager.Data.PartnerContexts, Config.QuestionsNumber);
@@ -23,20 +25,21 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         _dialogManager = new DialogManager(this, couplesManager);
         _fileManager = new FileManager(this, DocumentsManager, imageProcessor);
 
-        AnswerCommand answerCommand = new(this, _dialogManager);
-
-        Operations.Add(answerCommand);
+        Operations.Add(new DescribeTest(this));
         Operations.Add(new AcceptName(this, _dialogManager));
         Operations.Add(new AcceptOpinion(this, _dialogManager));
-
-        Start.Format($"/{answerCommand.BotCommand.Command}");
-
+        Operations.Add(new StartTest(this, _dialogManager));
+        Operations.Add(new ContinueTest(this, _dialogManager));
+        Operations.Add(new ShowTable(this));
+        Operations.Add(new Finalize(this, _dialogManager));
 
         GoogleSheetsManager.Documents.Document document = DocumentsManager.GetOrAdd(Config.GoogleSheetId);
         Sheet sheet = document.GetOrAddSheet(Config.GoogleTitle);
         _sheetManager = new SheetManager(Config.GoogleRange, sheet);
 
         _chartProvider = new ChartProvider(config.ChartConfigTemplate, imageProcessor);
+
+        StartKeyboardProvider = CreateSimpleKeyboard<DescribeTest>(Config.Texts.DescribeButton);
     }
 
     protected override void AfterLoad()
@@ -61,7 +64,29 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         }
 
         Partner context = CreatePartnerContext(sender.Id, info.CoupleId);
-        return _dialogManager.NextStepAsync(message.Chat, sender.Id, context);
+        return _dialogManager.NextStepAsync(message.Chat, context);
+    }
+
+    internal static InlineKeyboardButton CreateCallbackButton<TCallback>(string caption)
+    {
+        return new InlineKeyboardButton(caption)
+        {
+            CallbackData = $"{typeof(TCallback).Name}"
+        };
+    }
+
+    internal static InlineKeyboardButton CreateUriButton(string caption, Uri uri)
+    {
+        return new InlineKeyboardButton(caption)
+        {
+            Url = uri.AbsoluteUri
+        };
+    }
+
+    internal static KeyboardProvider CreateSimpleKeyboard<TCallback>(string buttonCaption)
+    {
+        InlineKeyboardButton button = CreateCallbackButton<TCallback>(buttonCaption);
+        return new InlineKeyboardMarkup(button);
     }
 
     internal Partner CreatePartnerContext(long userId, Guid? coupleId = null)
@@ -76,24 +101,23 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         return context;
     }
 
-    internal async Task OnConditionReadyAsync(Guid guid)
+    internal async Task ShowChartAsync(Guid guid)
     {
-        List<Partner> contexts = SaveManager.Data.PartnerContexts.Values
-                                            .Where(c => c.CoupleId == guid)
-                                            .OrderByDescending(c => c.IsInitiator)
-                                            .ToList();
-
-        await _sheetManager.UploadDataAsync(contexts);
-        byte[]? tablePng = await _fileManager.DownloadAsync();
-
         List<decimal> data = new();
         for (int i = 0; i < Config.QuestionsNumber; ++i)
         {
-            data.Add(contexts.Average(p => (decimal) p.Opinions[i]));
+            data.Add(SaveManager.Data.GetContextsWith(guid).Average(p => (decimal) p.Opinions[i]));
         }
 
         byte[]? chartPng = _chartProvider.GetChart(data, Config.Texts.CoupleQuestions.Select(q => q.Title));
-        await _dialogManager.FinalizeCommunicationAsync(guid, tablePng, chartPng);
+        await _dialogManager.ShowChartAsync(guid, chartPng);
+    }
+
+    internal async Task ShowTableAsync(Guid guid, Chat chat)
+    {
+        await _sheetManager.UploadDataAsync(SaveManager.Data.GetContextsWith(guid));
+        byte[]? tablePng = await _fileManager.DownloadAsync();
+        await _dialogManager.ShowTableAsync(chat, tablePng);
     }
 
     internal void Save() => SaveManager.Save();

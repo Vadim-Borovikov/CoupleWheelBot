@@ -10,17 +10,31 @@ namespace CoupleWheelBot.Configs;
 public class Texts : AbstractBot.Configs.Texts
 {
     [Required]
-    [MinLength(1)]
-    public string AnswerCommandDescription { get; init; } = null!;
+    public string DescribeButton { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate Describe { get; init; } = null!;
+
+    [Required]
+    public string InviteButton { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate Invite { get; init; } = null!;
+
+    [Required]
+    public string ShareButton { get; init; } = null!;
+
+    [Required]
+    public List<string> InviteMessageFormat { get; init; } = null!;
+
+    [Required]
+    public string NextButton { get; init; } = null!;
 
     [Required]
     public MessageTemplate NameQuestion { get; init; } = null!;
 
     [Required]
     public MessageTemplate QuestionsStart { get; init; } = null!;
-
-    [Required]
-    public MessageTemplate InviteMessageFormat { get; init; } = null!;
 
     [Required]
     public MessageTemplate InviteError { get; init; } = null!;
@@ -38,5 +52,44 @@ public class Texts : AbstractBot.Configs.Texts
     public MessageTemplate WaitingForPartner { get; init; } = null!;
 
     [Required]
-    public MessageTemplate FinalMessage { get; init; } = null!;
+    public MessageTemplate ChartPreMessage { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate ChartCaption { get; init; } = null!;
+
+    [Required]
+    public string TableButton { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate TablePreMessage { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate TableCaption { get; init; } = null!;
+
+    [Required]
+    public string FinalizeButton { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate FinalMessageStart { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate FinalMessageVideoFormat { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate FinalMessageEnd { get; init; } = null!;
+
+    [Required]
+    public string PollButton { get; init; } = null!;
+
+    [Required]
+    public string ProjectButton { get; init; } = null!;
+
+    [Required]
+    public string ChannelButton { get; init; } = null!;
+
+    [Required]
+    public string NewTestButton { get; init; } = null!;
+
+    [Required]
+    public string OtherTestButton { get; init; } = null!;
 }

@@ -32,5 +32,5 @@ internal sealed class FileManager
     private const string PdfMime = "application/pdf";
 
     private const int PadPixels = 30;
-    private const int BottomExtraPadPixels = 130;
+    private const int BottomExtraPadPixels = 0;
 }

@@ -22,4 +22,13 @@
     <ProjectReference Include="..\CoupleWheelBot\CoupleWheelBot.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Images\step10.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Images\step2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

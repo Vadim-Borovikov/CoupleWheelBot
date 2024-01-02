@@ -29,7 +29,7 @@ internal sealed class AcceptOpinion : Operation<AcceptOpinionInfo>
     protected override Task ExecuteAsync(AcceptOpinionInfo info, Message message, User sender)
     {
         _manager.AcceptEstimate(info.Context, info.Index, info.Opinion);
-        return _manager.NextStepAsync(message.Chat, sender.Id, info.Context);
+        return _manager.NextStepAsync(message.Chat, info.Context);
     }
 
     private readonly DialogManager _manager;

@@ -1,7 +1,9 @@
 ﻿using AbstractBot;
 using AbstractBot.Configs;
 using CoupleWheelBot.Contexts;
+using CoupleWheelBot.Operations;
 using GryphonUtilities.Extensions;
+using GryphonUtilities.Helpers;
 using MoreLinq.Extensions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -15,21 +17,23 @@ internal sealed class DialogManager
     {
         _bot = bot;
         _couplesManager = couplesManager;
+
+        string inviteTextFromat = Text.FormatLines(_bot.Config.Texts.InviteMessageFormat, LinkFormat);
+        _inviteUrlFormat = string.Format(ShareLinkFormat, inviteTextFromat);
     }
 
-    public async Task NextStepAsync(Chat chat, long userId, Partner? context = null)
+    public Task StartTestAsync(Chat chat, long userId)
+    {
+        Partner context = _bot.CreatePartnerContext(userId);
+        KeyboardProvider keyboard = CreateInviteKeyboard(_bot.Config.Texts.ShareButton, _inviteUrlFormat,
+            (_bot.User?.Username).Denull(), context.CoupleId, _bot.Config.Texts.NextButton);
+        return _bot.Config.Texts.Invite.SendAsync(_bot, chat, keyboard);
+    }
+
+    public async Task NextStepAsync(Chat chat, Partner context)
     {
         MessageTemplate messageTemplate;
         KeyboardProvider keyboardProvider = KeyboardProvider.Same;
-        if (context is null)
-        {
-            context = _bot.CreatePartnerContext(userId);
-
-            await _bot.Config.Texts.QuestionsStart.SendAsync(_bot, chat);
-
-            string link = string.Format(LinkFormat, _bot.User.Denull().Username, context.CoupleId);
-            await _bot.Config.Texts.InviteMessageFormat.Format(link).SendAsync(_bot, chat);
-        }
 
         if (string.IsNullOrWhiteSpace(context.UserName))
         {
@@ -48,7 +52,7 @@ internal sealed class DialogManager
             {
                 if (_couplesManager.IsDone(context.CoupleId))
                 {
-                    await _bot.OnConditionReadyAsync(context.CoupleId);
+                    await _bot.ShowChartAsync(context.CoupleId);
                     return;
                 }
 
@@ -78,18 +82,34 @@ internal sealed class DialogManager
         _bot.Save();
     }
 
-    public async Task FinalizeCommunicationAsync(Guid guid, byte[]? tablePng, byte[]? chartPng)
+    public async Task ShowChartAsync(Guid guid, byte[]? chartPng)
     {
-        IEnumerable<Chat> chats = _couplesManager.GetUserIdsWith(guid).Select(GetPrivateChat);
-        foreach (Chat chat in chats)
+        KeyboardProvider keyboardProvider = Bot.CreateSimpleKeyboard<ShowTable>(_bot.Config.Texts.TableButton);
+        foreach (Chat chat in _couplesManager.GetChatsWith(guid))
         {
-            await SendPngAsync(chat, tablePng);
-            await SendPngAsync(chat, chartPng);
-            await _bot.Config.Texts.FinalMessage.SendAsync(_bot, chat);
+            await _bot.Config.Texts.ChartPreMessage.SendAsync(_bot, chat);
+            await SendPngAsync(chat, chartPng, keyboardProvider, _bot.Config.Texts.ChartCaption.EscapeIfNeeded());
         }
     }
 
-    private Task SendPngAsync(Chat chat, byte[]? png)
+    public async Task ShowTableAsync(Chat chat, byte[]? tablePng)
+    {
+        KeyboardProvider keyboardProvider = Bot.CreateSimpleKeyboard<Finalize>(_bot.Config.Texts.FinalizeButton);
+        await _bot.Config.Texts.TablePreMessage.SendAsync(_bot, chat);
+        await SendPngAsync(chat, tablePng, keyboardProvider, _bot.Config.Texts.TableCaption.EscapeIfNeeded());
+    }
+
+    public async Task FinalizeAsync(Chat chat)
+    {
+        await _bot.Config.Texts.FinalMessageStart.SendAsync(_bot, chat);
+        await _bot.Config.Texts.FinalMessageVideoFormat.Format(_bot.Config.VideoUrl).SendAsync(_bot, chat);
+
+        KeyboardProvider keyboardProvider = CreateFinalizeKeyboard();
+        await _bot.Config.Texts.FinalMessageEnd.SendAsync(_bot, chat, keyboardProvider);
+    }
+
+    private Task SendPngAsync(Chat chat, byte[]? png, KeyboardProvider? keyboardProvider = null,
+        string? caption = null)
     {
         if (png is null)
         {
@@ -99,17 +119,9 @@ internal sealed class DialogManager
         using (MemoryStream stream = new(png))
         {
             InputFile photo = InputFile.FromStream(stream);
-            return _bot.SendPhotoAsync(chat, photo);
+            return _bot.SendPhotoAsync(chat, photo, keyboardProvider, caption: caption,
+                parseMode: ParseMode.MarkdownV2);
         }
-    }
-
-    private static Chat GetPrivateChat(long userId)
-    {
-        return new Chat
-        {
-            Id = userId,
-            Type = ChatType.Private
-        };
     }
 
     private static InlineKeyboardMarkup GetEstimateKeyboard(byte index)
@@ -124,15 +136,40 @@ internal sealed class DialogManager
     {
         return new InlineKeyboardButton(estimate.ToString())
         {
-            CallbackData = $"{nameof(Operations.AcceptOpinion)}{index}{Bot.QuerySeparator}{estimate}"
+            CallbackData = $"{nameof(AcceptOpinion)}{index}{Bot.QuerySeparator}{estimate}",
         };
+    }
+
+    private static KeyboardProvider CreateInviteKeyboard(string shareButtonCaption, string urlFormat, string botName,
+        Guid coupleId, string nextButtonCaption)
+    {
+        Uri uri = new(string.Format(urlFormat, botName, coupleId));
+        InlineKeyboardButton invite = Bot.CreateUriButton(shareButtonCaption, uri);
+
+        InlineKeyboardButton next = Bot.CreateCallbackButton<ContinueTest>(nextButtonCaption);
+
+        return new InlineKeyboardMarkup(new[] { invite, next }.Batch(1));
+    }
+
+    private KeyboardProvider CreateFinalizeKeyboard()
+    {
+        InlineKeyboardButton poll = Bot.CreateUriButton(_bot.Config.Texts.PollButton, _bot.Config.PollUrl);
+        InlineKeyboardButton project = Bot.CreateUriButton(_bot.Config.Texts.ProjectButton, _bot.Config.ProjectUrl);
+        InlineKeyboardButton channel = Bot.CreateUriButton(_bot.Config.Texts.ChannelButton, _bot.Config.ChannelUrl);
+        InlineKeyboardButton newTest = Bot.CreateCallbackButton<StartTest>(_bot.Config.Texts.NewTestButton);
+        InlineKeyboardButton otherTest =
+            Bot.CreateUriButton(_bot.Config.Texts.OtherTestButton, _bot.Config.OtherTestUrl);
+
+        return new InlineKeyboardMarkup(new[] { poll, project, channel, newTest, otherTest }.Batch(1));
     }
 
     private readonly Bot _bot;
 
     private readonly CouplesManager _couplesManager;
+    private readonly string _inviteUrlFormat;
 
     private const int ButtonsTotal = 10;
     private const int ButtonsPerRaw = 5;
     private const string LinkFormat = "https://t.me/{0}?start={1}";
+    private const string ShareLinkFormat = "https://t.me/share/url?text={0}";
 }
