@@ -63,6 +63,12 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
             return Config.Texts.InviteError.SendAsync(this, message.Chat);
         }
 
+        if (SaveManager.Data.PartnerContexts.ContainsKey(sender.Id) &&
+            (SaveManager.Data.PartnerContexts[sender.Id].CoupleId == info.CoupleId))
+        {
+            return Task.CompletedTask;
+        }
+
         Partner context = CreatePartnerContext(sender.Id, info.CoupleId);
         return _dialogManager.NextStepAsync(message.Chat, context);
     }
