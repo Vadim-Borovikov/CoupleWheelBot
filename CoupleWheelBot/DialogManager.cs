@@ -69,17 +69,16 @@ internal sealed class DialogManager
         _bot.Save();
     }
 
-    public void AcceptEstimate(Partner context, byte index, byte opinion)
+    public bool AcceptOpinion(Partner context, byte index, byte opinion)
     {
-        if (context.Opinions.Count == index)
+        if (context.Opinions.Count != index)
         {
-            context.Opinions.Add(opinion);
+            return false;
         }
-        else
-        {
-            context.Opinions[index] = opinion;
-        }
+
+        context.Opinions.Add(opinion);
         _bot.Save();
+        return true;
     }
 
     public async Task ShowChartAsync(Guid guid, byte[]? chartPng)
@@ -136,7 +135,7 @@ internal sealed class DialogManager
     {
         return new InlineKeyboardButton(estimate.ToString())
         {
-            CallbackData = $"{nameof(AcceptOpinion)}{index}{Bot.QuerySeparator}{estimate}",
+            CallbackData = $"{nameof(Operations.AcceptOpinion)}{index}{Bot.QuerySeparator}{estimate}",
         };
     }
 
