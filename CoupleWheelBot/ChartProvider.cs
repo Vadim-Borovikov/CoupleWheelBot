@@ -25,8 +25,7 @@ internal sealed class ChartProvider
         _chart.Config = string.Format(_configTemplate, allData, allLabels);
 
         byte[]? generated = _chart.ToByteArray();
-        byte[]? cropped = generated is null ? null : _imageProcessor.CropContent(generated);
-        return cropped is null ? null : _imageProcessor.Pad(cropped, Pad, Pad, Pad, Pad);
+        return generated is null ? null : _imageProcessor.Pad(generated, Pad, Pad, Pad, Pad);
     }
 
     private static string JoinWithQuotes(IEnumerable<string> values) => string.Join(',', values.Select(s => $"'{s}'"));
