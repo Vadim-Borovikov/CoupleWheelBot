@@ -23,6 +23,6 @@ public class Question
 
     public MessageTemplate GetMessageTemplate(MessageTemplate format)
     {
-        return format.Format(string.Join(' ', Title), Description, Low, High);
+        return format.Format(string.Join(' ', Title).Trim(), Description, Low, High);
     }
 }
