@@ -18,19 +18,7 @@ internal sealed class ImageProcessor : IImageProcessor
         }
     }
 
-    public byte[] CropContent(byte[] png)
-    {
-        using (Image image = Image.Load(png))
-        {
-            image.Mutate(i => i.EntropyCrop());
-
-            using (MemoryStream stream = new())
-            {
-                image.SaveAsPng(stream);
-                return stream.ToArray();
-            }
-        }
-    }
+    public byte[] CropContent(byte[] png) => png;
 
     public byte[] Pad(byte[] png, ushort left, ushort right, ushort top, ushort bottom)
     {
