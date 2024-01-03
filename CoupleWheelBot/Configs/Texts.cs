@@ -25,19 +25,22 @@ public class Texts : AbstractBot.Configs.Texts
     public string ShareButton { get; init; } = null!;
 
     [Required]
-    public List<string> InviteMessageFormat { get; init; } = null!;
+    public MessageTemplate InviteMessageFormat { get; init; } = null!;
 
     [Required]
-    public List<string> FinaLShareMessageFormat { get; init; } = null!;
+    public MessageTemplate InviteReply { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate FinaLShareMessageFormat { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate FinaLShareReply { get; init; } = null!;
 
     [Required]
     public string NextButton { get; init; } = null!;
 
     [Required]
     public MessageTemplate NameQuestion { get; init; } = null!;
-
-    [Required]
-    public MessageTemplate QuestionsStart { get; init; } = null!;
 
     [Required]
     public MessageTemplate InviteError { get; init; } = null!;

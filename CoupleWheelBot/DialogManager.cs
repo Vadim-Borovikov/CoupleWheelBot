@@ -2,8 +2,6 @@
 using AbstractBot.Configs;
 using CoupleWheelBot.Contexts;
 using CoupleWheelBot.Operations;
-using GryphonUtilities.Extensions;
-using GryphonUtilities.Helpers;
 using MoreLinq.Extensions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -17,15 +15,12 @@ internal sealed class DialogManager
     {
         _bot = bot;
         _couplesManager = couplesManager;
-
-        _inviteTextFromat = Text.FormatLines(_bot.Config.Texts.InviteMessageFormat, LinkFormat);
     }
 
     public Task StartTestAsync(Chat chat, long userId)
     {
         Partner context = _bot.CreatePartnerContext(userId);
-        KeyboardProvider keyboard = CreateInviteKeyboard(_bot.Config.Texts.ShareButton, _inviteTextFromat,
-            (_bot.User?.Username).Denull(), context.CoupleId, _bot.Config.Texts.NextButton);
+        KeyboardProvider keyboard = CreateInviteKeyboard(_bot.Config.Texts.ShareButton, context.CoupleId);
         return _bot.Config.Texts.Invite.SendAsync(_bot, chat, keyboard);
     }
 
@@ -149,13 +144,10 @@ internal sealed class DialogManager
         };
     }
 
-    private static KeyboardProvider CreateInviteKeyboard(string shareButtonCaption, string urlFormat, string botName,
-        Guid coupleId, string nextButtonCaption)
+    private static KeyboardProvider CreateInviteKeyboard(string caption, Guid coupleId)
     {
-        InlineKeyboardButton invite = Bot.CreateShareButton(shareButtonCaption, urlFormat, botName, coupleId);
-        InlineKeyboardButton next = Bot.CreateCallbackButton<ContinueTest>(nextButtonCaption);
-
-        return new InlineKeyboardMarkup(new[] { invite, next }.Batch(1));
+        InlineKeyboardButton button = Bot.CreateCallbackButton<InvitePartner>(caption, coupleId);
+        return new InlineKeyboardMarkup(button);
     }
 
     private KeyboardProvider CreateFinalizeKeyboard()
@@ -164,20 +156,20 @@ internal sealed class DialogManager
         InlineKeyboardButton project = Bot.CreateUriButton(_bot.Config.Texts.ProjectButton, _bot.Config.ProjectUrl);
         InlineKeyboardButton channel = Bot.CreateUriButton(_bot.Config.Texts.ChannelButton, _bot.Config.ChannelUrl);
         InlineKeyboardButton newTest = Bot.CreateCallbackButton<StartTest>(_bot.Config.Texts.NewTestButton);
-        InlineKeyboardButton finalShare = Bot.CreateShareButton(_bot.Config.Texts.FinalShareButton,
-            Text.JoinLines(_bot.Config.Texts.FinaLShareMessageFormat), (_bot.User?.Username).Denull());
+        InlineKeyboardButton finalShare =
+            Bot.CreateCallbackButton<ShareWithFriend>(_bot.Config.Texts.FinalShareButton);
         InlineKeyboardButton otherTest =
             Bot.CreateUriButton(_bot.Config.Texts.OtherTestButton, _bot.Config.OtherTestUrl);
 
         return new InlineKeyboardMarkup(new[] { poll, project, channel, newTest, finalShare, otherTest }.Batch(1));
     }
 
+    public const string LinkFormat = "https://t.me/{0}?start={1}";
+
     private readonly Bot _bot;
 
     private readonly CouplesManager _couplesManager;
-    private readonly string _inviteTextFromat;
 
     private const int ButtonsTotal = 10;
     private const int ButtonsPerRaw = 5;
-    private const string LinkFormat = "https://t.me/{0}?start={1}";
 }

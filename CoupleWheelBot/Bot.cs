@@ -8,6 +8,7 @@ using CoupleWheelBot.Operations;
 using CoupleWheelBot.Operations.Infos;
 using CoupleWheelBot.Save;
 using GoogleSheetsManager.Documents;
+using GryphonUtilities.Extensions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -32,6 +33,11 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         Operations.Add(new ContinueTest(this, _dialogManager));
         Operations.Add(new ShowTable(this));
         Operations.Add(new Finalize(this, _dialogManager));
+
+        KeyboardProvider keyboardProvider = CreateSimpleKeyboard<ContinueTest>(config.Texts.NextButton);
+        Operations.Add(new InvitePartner(this, keyboardProvider));
+
+        Operations.Add(new ShareWithFriend(this));
 
         GoogleSheetsManager.Documents.Document document = DocumentsManager.GetOrAdd(Config.GoogleSheetId);
         Sheet sheet = document.GetOrAddSheet(Config.GoogleTitle);
@@ -73,11 +79,16 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         return _dialogManager.NextStepAsync(message.Chat, context);
     }
 
-    internal static InlineKeyboardButton CreateCallbackButton<TCallback>(string caption)
+    internal static InlineKeyboardButton CreateCallbackButton<TCallback>(string caption, params object[]? args)
     {
+        string data = typeof(TCallback).Name;
+        if (args is not null)
+        {
+            data += string.Join(QuerySeparator, args.Select(o => o.ToString().Denull()));
+        }
         return new InlineKeyboardButton(caption)
         {
-            CallbackData = $"{typeof(TCallback).Name}"
+            CallbackData = data
         };
     }
 
@@ -86,15 +97,6 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         return new InlineKeyboardButton(caption)
         {
             Url = uri.AbsoluteUri
-        };
-    }
-
-    internal static InlineKeyboardButton CreateShareButton(string caption, string textFormat,
-        params object?[] textArgs)
-    {
-        return new InlineKeyboardButton(caption)
-        {
-            Url = CreateShareUri(textFormat, textArgs).AbsoluteUri
         };
     }
 
@@ -149,18 +151,10 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         SaveManager.Save();
     }
 
-    private static Uri CreateShareUri(string textFormat, params object?[] textArgs)
-    {
-        string text = string.Format(textFormat, textArgs);
-        string url = string.Format(ShareLinkFormat, text);
-        return new Uri(url);
-    }
-
     private readonly DialogManager _dialogManager;
     private readonly SheetManager _sheetManager;
     private readonly FileManager _fileManager;
     private readonly ChartProvider _chartProvider;
 
     internal const string QuerySeparator = "_";
-    private const string ShareLinkFormat = "https://t.me/share/url?text={0}";
 }
