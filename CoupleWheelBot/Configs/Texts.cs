@@ -28,6 +28,9 @@ public class Texts : AbstractBot.Configs.Texts
     public List<string> InviteMessageFormat { get; init; } = null!;
 
     [Required]
+    public List<string> FinaLShareMessageFormat { get; init; } = null!;
+
+    [Required]
     public string NextButton { get; init; } = null!;
 
     [Required]
@@ -95,6 +98,9 @@ public class Texts : AbstractBot.Configs.Texts
 
     [Required]
     public string NewTestButton { get; init; } = null!;
+
+    [Required]
+    public string FinalShareButton { get; init; } = null!;
 
     [Required]
     public string OtherTestButton { get; init; } = null!;

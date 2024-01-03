@@ -89,6 +89,15 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         };
     }
 
+    internal static InlineKeyboardButton CreateShareButton(string caption, string textFormat,
+        params object?[] textArgs)
+    {
+        return new InlineKeyboardButton(caption)
+        {
+            Url = CreateShareUri(textFormat, textArgs).AbsoluteUri
+        };
+    }
+
     internal static KeyboardProvider CreateSimpleKeyboard<TCallback>(string buttonCaption)
     {
         InlineKeyboardButton button = CreateCallbackButton<TCallback>(buttonCaption);
@@ -140,10 +149,18 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         SaveManager.Save();
     }
 
+    private static Uri CreateShareUri(string textFormat, params object?[] textArgs)
+    {
+        string text = string.Format(textFormat, textArgs);
+        string url = string.Format(ShareLinkFormat, text);
+        return new Uri(url);
+    }
+
     private readonly DialogManager _dialogManager;
     private readonly SheetManager _sheetManager;
     private readonly FileManager _fileManager;
     private readonly ChartProvider _chartProvider;
 
     internal const string QuerySeparator = "_";
+    private const string ShareLinkFormat = "https://t.me/share/url?text={0}";
 }
