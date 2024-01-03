@@ -10,7 +10,11 @@ internal sealed class ChartProvider
     {
         _configTemplate = configTemplate;
         _imageProcessor = imageProcessor;
-        _chart = new Chart();
+        _chart = new Chart
+        {
+            Width = Width,
+            Height = Height
+        };
     }
 
     public byte[]? GetChart(IEnumerable<decimal> data, IEnumerable<IEnumerable<string>> labels)
@@ -22,7 +26,7 @@ internal sealed class ChartProvider
 
         byte[]? generated = _chart.ToByteArray();
         byte[]? cropped = generated is null ? null : _imageProcessor.CropContent(generated);
-        return cropped is null ? null : _imageProcessor.Pad(cropped, PadPixels, PadPixels, PadPixels, PadPixels);
+        return cropped is null ? null : _imageProcessor.Pad(cropped, Pad, Pad, Pad, Pad);
     }
 
     private static string JoinWithQuotes(IEnumerable<string> values) => string.Join(',', values.Select(s => $"'{s}'"));
@@ -31,5 +35,7 @@ internal sealed class ChartProvider
     private readonly string _configTemplate;
     private readonly IImageProcessor _imageProcessor;
 
-    private const int PadPixels = 30;
+    private const int Width = 1000;
+    private const int Height = 600;
+    private const int Pad = 30;
 }
