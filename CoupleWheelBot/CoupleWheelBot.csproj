@@ -9,9 +9,9 @@
   <ItemGroup>
     <PackageReference Include="AbstractBot" Version="71.0.0" />
     <PackageReference Include="morelinq" Version="4.1.0" />
-    <PackageReference Include="PDFtoImage" Version="2.4.3" />
+    <PackageReference Include="PDFtoImage" Version="3.0.0" />
     <PackageReference Include="QuickChart" Version="2.3.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.1" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.2" />
   </ItemGroup>
 
 </Project>
