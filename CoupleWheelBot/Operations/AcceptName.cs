@@ -16,7 +16,7 @@ internal sealed class AcceptName : Operation<AcceptNameInfo>
         info = null;
 
         Partner? context = Bot.TryGetContext<Partner>(sender.Id);
-        if (context is null || !string.IsNullOrWhiteSpace(context.UserName))
+        if (context is null || !string.IsNullOrWhiteSpace(context.Name))
         {
             return false;
         }
@@ -31,13 +31,13 @@ internal sealed class AcceptName : Operation<AcceptNameInfo>
             return false;
         }
 
-        info = new AcceptNameInfo(context, message.Text);
+        info = new AcceptNameInfo(context, message.Text, sender.Username);
         return true;
     }
 
     protected override Task ExecuteAsync(AcceptNameInfo info, Message message, User sender)
     {
-        _manager.AcceptName(info.Context, info.Text);
+        _manager.AcceptName(info.Context, info.Name, info.Username);
         return _manager.NextStepAsync(message.Chat, info.Context);
     }
 

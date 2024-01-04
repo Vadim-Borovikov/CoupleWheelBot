@@ -5,11 +5,13 @@ namespace CoupleWheelBot.Operations.Infos;
 internal sealed class AcceptNameInfo
 {
     public readonly Partner Context;
-    public readonly string Text;
+    public readonly string Name;
+    public readonly string? Username;
 
-    public AcceptNameInfo(Partner context, string text)
+    public AcceptNameInfo(Partner context, string name, string? username)
     {
         Context = context;
-        Text = text;
+        Name = name;
+        Username = username;
     }
 }

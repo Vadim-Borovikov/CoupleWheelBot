@@ -22,7 +22,7 @@ internal sealed class SheetManager
     {
         List<object> result = new()
         {
-            opinion.UserName,
+            opinion.Name,
             ""
         };
         result.AddRange(opinion.Opinions.Select(o => (object) o));

@@ -15,7 +15,15 @@ public class Config : ConfigWithSheets<Texts>
 
     [Required]
     [MinLength(1)]
+    public string GoogleTitleLogs { get; init; } = null!;
+
+    [Required]
+    [MinLength(1)]
     public string GoogleTitle { get; init; } = null!;
+
+    [Required]
+    [MinLength(1)]
+    public string GoogleRangeLogs { get; init; } = null!;
 
     [Required]
     [MinLength(1)]

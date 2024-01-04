@@ -2,6 +2,7 @@
 using AbstractBot.Configs;
 using CoupleWheelBot.Contexts;
 using CoupleWheelBot.Operations;
+using CoupleWheelBot.Records;
 using MoreLinq.Extensions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -11,10 +12,11 @@ namespace CoupleWheelBot;
 
 internal sealed class DialogManager
 {
-    public DialogManager(Bot bot, CouplesManager couplesManager)
+    public DialogManager(Bot bot, CouplesManager couplesManager, Manager recordsManager)
     {
         _bot = bot;
         _couplesManager = couplesManager;
+        _recordsManager = recordsManager;
     }
 
     public Task StartTestAsync(Chat chat, long userId)
@@ -29,7 +31,7 @@ internal sealed class DialogManager
         MessageTemplate messageTemplate;
         KeyboardProvider keyboardProvider = KeyboardProvider.Same;
 
-        if (string.IsNullOrWhiteSpace(context.UserName))
+        if (string.IsNullOrWhiteSpace(context.Name))
         {
             messageTemplate = _bot.Config.Texts.NameQuestion;
         }
@@ -57,9 +59,10 @@ internal sealed class DialogManager
         await messageTemplate.SendAsync(_bot, chat, keyboardProvider);
     }
 
-    public void AcceptName(Partner context, string name)
+    public void AcceptName(Partner context, string name, string? username)
     {
-        context.UserName = name;
+        context.Name = name;
+        context.Username = username;
         _bot.Save();
     }
 
@@ -75,8 +78,8 @@ internal sealed class DialogManager
         return true;
     }
 
-    public async Task ShowChartAsync(Guid guid, ChartProvider chartProvider, IEnumerable<decimal> data,
-        IEnumerable<IEnumerable<string>> labels)
+    public async Task ShowChartAndSaveRecordAsync(Guid guid, ChartProvider chartProvider, IEnumerable<decimal> data,
+        IEnumerable<IEnumerable<string>> labels, Record? record)
     {
         List<Chat> chats = _couplesManager.GetChatsWith(guid).ToList();
         Dictionary<long, StatusMessage> statusMessages = new();
@@ -86,6 +89,12 @@ internal sealed class DialogManager
             await _bot.Config.Texts.ChartPreMessage.SendAsync(_bot, chat);
             statusMessages[chat.Id] = await StatusMessage.CreateAsync(_bot, chat, _bot.Config.Texts.ChartStatus,
                 _bot.Config.Texts.StatusMessageEndFormat);
+        }
+
+        if (record is not null)
+        {
+            _recordsManager.Add(record);
+            await _recordsManager.SaveAsync();
         }
 
         byte[]? chartPng = chartProvider.GetChart(data, labels);
@@ -169,6 +178,7 @@ internal sealed class DialogManager
     private readonly Bot _bot;
 
     private readonly CouplesManager _couplesManager;
+    private readonly Manager _recordsManager;
 
     private const int ButtonsTotal = 10;
     private const int ButtonsPerRaw = 5;

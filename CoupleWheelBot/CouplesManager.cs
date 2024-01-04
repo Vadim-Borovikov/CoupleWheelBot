@@ -37,7 +37,8 @@ internal sealed class CouplesManager
         };
     }
 
-    private const byte PartnersInCouple = 2;
+    public const byte PartnersInCouple = 2;
+
     private readonly Dictionary<long, Partner> _contexts;
     private readonly byte _questionsAmount;
 }

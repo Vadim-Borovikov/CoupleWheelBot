@@ -20,7 +20,7 @@ internal sealed class AcceptOpinion : Operation<AcceptOpinionInfo>
         out AcceptOpinionInfo? info)
     {
         Partner? context = Bot.TryGetContext<Partner>(sender.Id);
-        info = string.IsNullOrWhiteSpace(context?.UserName)
+        info = string.IsNullOrWhiteSpace(context?.Name)
             ? null
             : AcceptOpinionInfo.From(context, callbackQueryDataCore);
         return info is not null;

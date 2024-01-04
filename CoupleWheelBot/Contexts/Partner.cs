@@ -7,7 +7,9 @@ namespace CoupleWheelBot.Contexts;
 public sealed class Partner : Context
 {
     [UsedImplicitly]
-    public string UserName { get; set; } = null!;
+    public string Name { get; set; } = null!;
+    [UsedImplicitly]
+    public string? Username { get; set; }
     [UsedImplicitly]
     public bool IsInitiator { get; set; }
     [UsedImplicitly]
@@ -20,7 +22,7 @@ public sealed class Partner : Context
 
     public Partner(string name)
     {
-        UserName = name;
+        Name = name;
         Opinions = new List<byte>();
     }
 }
