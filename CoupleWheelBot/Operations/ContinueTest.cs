@@ -25,7 +25,7 @@ internal sealed class ContinueTest : Operation<ContinueTestInfo>
 
     protected override Task ExecuteAsync(ContinueTestInfo data, Message message, User sender)
     {
-        return _dialogManager.NextStepAsync(message.Chat, data.Context);
+        return _dialogManager.NextStepAsync(message.Chat, data.Context, sender);
     }
 
     private readonly DialogManager _dialogManager;

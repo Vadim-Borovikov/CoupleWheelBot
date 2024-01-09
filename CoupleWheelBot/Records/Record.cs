@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using CoupleWheelBot.Contexts;
 using CoupleWheelBot.Save;
 using GoogleSheetsManager;

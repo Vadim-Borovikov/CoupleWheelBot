@@ -40,9 +40,6 @@ public class Texts : AbstractBot.Configs.Texts
     public string NextButton { get; init; } = null!;
 
     [Required]
-    public MessageTemplate NameQuestion { get; init; } = null!;
-
-    [Required]
     public MessageTemplate InviteError { get; init; } = null!;
 
     [Required]

@@ -26,40 +26,37 @@ internal sealed class DialogManager
         return _bot.Config.Texts.Invite.SendAsync(_bot, chat, keyboard);
     }
 
-    public async Task NextStepAsync(Chat chat, Partner context)
+    public async Task NextStepAsync(Chat chat, Partner context, User sender)
     {
-        MessageTemplate messageTemplate;
-        KeyboardProvider keyboardProvider = KeyboardProvider.Same;
-
         if (string.IsNullOrWhiteSpace(context.Name))
         {
-            messageTemplate = _bot.Config.Texts.NameQuestion;
+            UpdateName(context, sender.FirstName, sender.Username);
+        }
+
+        MessageTemplate messageTemplate;
+        KeyboardProvider keyboardProvider = KeyboardProvider.Same;
+        int answersAmount = context.Opinions.Count;
+        if (answersAmount < _bot.Config.Texts.CoupleQuestions.Count)
+        {
+            messageTemplate = _bot.Config.Texts.CoupleQuestions[answersAmount]
+                                  .GetMessageTemplate(_bot.Config.Texts.CoupleQuestionFormat);
+            keyboardProvider = GetEstimateKeyboard((byte) answersAmount);
         }
         else
         {
-            int answersAmount = context.Opinions.Count;
-            if (answersAmount < _bot.Config.Texts.CoupleQuestions.Count)
+            if (_couplesManager.IsDone(context.CoupleId))
             {
-                messageTemplate = _bot.Config.Texts.CoupleQuestions[answersAmount]
-                                      .GetMessageTemplate(_bot.Config.Texts.CoupleQuestionFormat);
-                keyboardProvider = GetEstimateKeyboard((byte) answersAmount);
+                await _bot.ShowChartAsync(context.CoupleId);
+                return;
             }
-            else
-            {
-                if (_couplesManager.IsDone(context.CoupleId))
-                {
-                    await _bot.ShowChartAsync(context.CoupleId);
-                    return;
-                }
 
-                messageTemplate = _bot.Config.Texts.WaitingForPartner;
-            }
+            messageTemplate = _bot.Config.Texts.WaitingForPartner;
         }
 
         await messageTemplate.SendAsync(_bot, chat, keyboardProvider);
     }
 
-    public void AcceptName(Partner context, string name, string? username)
+    private void UpdateName(Partner context, string name, string? username)
     {
         context.Name = name;
         context.Username = username;

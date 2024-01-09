@@ -37,7 +37,6 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         _fileManager = new FileManager(this, DocumentsManager, imageProcessor);
 
         Operations.Add(new DescribeTest(this));
-        Operations.Add(new AcceptName(this, _dialogManager));
         Operations.Add(new AcceptOpinion(this, _dialogManager));
         Operations.Add(new StartTest(this, _dialogManager));
         Operations.Add(new ContinueTest(this, _dialogManager));
@@ -91,7 +90,7 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         }
 
         Partner context = CreatePartnerContext(sender.Id, info.CoupleId);
-        return _dialogManager.NextStepAsync(message.Chat, context);
+        return _dialogManager.NextStepAsync(message.Chat, context, sender);
     }
 
     internal static InlineKeyboardButton CreateCallbackButton<TCallback>(string caption, params object[]? args)
