@@ -111,11 +111,8 @@ internal sealed class DialogManager
 
     public async Task FinalizeAsync(Chat chat)
     {
-        await _bot.Config.Texts.FinalMessageStart.SendAsync(_bot, chat);
-        await _bot.Config.Texts.FinalMessageVideoFormat.Format(_bot.Config.VideoUrl).SendAsync(_bot, chat);
-
         KeyboardProvider keyboardProvider = CreateFinalizeKeyboard();
-        await _bot.Config.Texts.FinalMessageEnd.SendAsync(_bot, chat, keyboardProvider);
+        await _bot.Config.Texts.FinalMessage.SendAsync(_bot, chat, keyboardProvider);
     }
 
     private Task SendPngAsync(Chat chat, byte[]? png, KeyboardProvider? keyboardProvider = null,
@@ -160,14 +157,12 @@ internal sealed class DialogManager
     {
         InlineKeyboardButton poll = Bot.CreateUriButton(_bot.Config.Texts.PollButton, _bot.Config.PollUrl);
         InlineKeyboardButton project = Bot.CreateUriButton(_bot.Config.Texts.ProjectButton, _bot.Config.ProjectUrl);
-        InlineKeyboardButton channel = Bot.CreateUriButton(_bot.Config.Texts.ChannelButton, _bot.Config.ChannelUrl);
         InlineKeyboardButton newTest = Bot.CreateCallbackButton<StartTest>(_bot.Config.Texts.NewTestButton);
         InlineKeyboardButton finalShare =
             Bot.CreateCallbackButton<ShareWithFriend>(_bot.Config.Texts.FinalShareButton);
-        InlineKeyboardButton otherTest =
-            Bot.CreateUriButton(_bot.Config.Texts.OtherTestButton, _bot.Config.OtherTestUrl);
+        InlineKeyboardButton chatButton = Bot.CreateUriButton(_bot.Config.Texts.ChatButton, _bot.Config.ChatUrl);
 
-        return new InlineKeyboardMarkup(new[] { poll, project, channel, newTest, finalShare, otherTest }.Batch(1));
+        return new InlineKeyboardMarkup(new[] { poll, project, newTest, finalShare, chatButton }.Batch(1));
     }
 
     public const string LinkFormat = "https://t.me/{0}?start={1}";

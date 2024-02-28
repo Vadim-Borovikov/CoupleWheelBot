@@ -34,19 +34,13 @@ public class Config : ConfigWithSheets<Texts>
     public string ChartConfigTemplate { get; init; } = null!;
 
     [Required]
-    public Uri VideoUrl { get; init; } = null!;
-
-    [Required]
     public Uri PollUrl { get; init; } = null!;
 
     [Required]
     public Uri ProjectUrl { get; init; } = null!;
 
     [Required]
-    public Uri ChannelUrl { get; init; } = null!;
-
-    [Required]
-    public Uri OtherTestUrl { get; init; } = null!;
+    public Uri ChatUrl { get; init; } = null!;
 
     public byte QuestionsNumber => (byte) Texts.CoupleQuestions.Count;
 }

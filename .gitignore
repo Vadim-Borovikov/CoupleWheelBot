@@ -362,10 +362,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-/CoupleWheelBot.Web/appsettings.Development.json
 /CoupleWheelBot.Web/Properties/launchSettings.json
 /NuGet.Config
 /CoupleWheelBot.Web/save.json
-/CoupleWheelBot.Web/appsettings.Staging.json
 /CoupleWheelBot.Web/Properties/ServiceDependencies/Couple-Wheel-Bot - Azure/profile.arm.json
-/CoupleWheelBot.Web/appsettings.Test.json
+/CoupleWheelBot.Web/appsettings.*.json

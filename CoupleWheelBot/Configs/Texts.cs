@@ -73,13 +73,7 @@ public class Texts : AbstractBot.Configs.Texts
     public string FinalizeButton { get; init; } = null!;
 
     [Required]
-    public MessageTemplate FinalMessageStart { get; init; } = null!;
-
-    [Required]
-    public MessageTemplate FinalMessageVideoFormat { get; init; } = null!;
-
-    [Required]
-    public MessageTemplate FinalMessageEnd { get; init; } = null!;
+    public MessageTemplate FinalMessage { get; init; } = null!;
 
     [Required]
     public MessageTemplate ChartStatus { get; init; } = null!;
@@ -94,14 +88,11 @@ public class Texts : AbstractBot.Configs.Texts
     public string ProjectButton { get; init; } = null!;
 
     [Required]
-    public string ChannelButton { get; init; } = null!;
-
-    [Required]
     public string NewTestButton { get; init; } = null!;
 
     [Required]
     public string FinalShareButton { get; init; } = null!;
 
     [Required]
-    public string OtherTestButton { get; init; } = null!;
+    public string ChatButton { get; init; } = null!;
 }
