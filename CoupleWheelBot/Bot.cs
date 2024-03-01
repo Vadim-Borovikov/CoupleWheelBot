@@ -41,6 +41,7 @@ public sealed class Bot : BotWithSheets<Config, Texts, Data, StartData>
         Operations.Add(new StartTest(this, _dialogManager));
         Operations.Add(new ContinueTest(this, _dialogManager));
         Operations.Add(new ShowTable(this));
+        Operations.Add(new ShowInfo(this, _dialogManager));
         Operations.Add(new Finalize(this, _dialogManager));
 
         KeyboardProvider keyboardProvider = CreateSimpleKeyboard<ContinueTest>(config.Texts.NextButton);

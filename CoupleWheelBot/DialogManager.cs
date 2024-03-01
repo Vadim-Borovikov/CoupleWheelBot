@@ -1,4 +1,5 @@
-﻿using AbstractBot;
+﻿using System.Net.Http.Headers;
+using AbstractBot;
 using AbstractBot.Configs;
 using CoupleWheelBot.Contexts;
 using CoupleWheelBot.Operations;
@@ -103,16 +104,22 @@ internal sealed class DialogManager
         }
     }
 
-    public async Task ShowTableAsync(Chat chat, byte[]? tablePng)
+    public Task ShowTableAsync(Chat chat, byte[]? tablePng)
     {
-        KeyboardProvider keyboardProvider = Bot.CreateSimpleKeyboard<Finalize>(_bot.Config.Texts.FinalizeButton);
-        await SendPngAsync(chat, tablePng, keyboardProvider, _bot.Config.Texts.TableCaption.EscapeIfNeeded());
+        KeyboardProvider keyboardProvider = Bot.CreateSimpleKeyboard<ShowInfo>(_bot.Config.Texts.InfoButton);
+        return SendPngAsync(chat, tablePng, keyboardProvider, _bot.Config.Texts.TableCaption.EscapeIfNeeded());
     }
 
-    public async Task FinalizeAsync(Chat chat)
+    public Task ShowInfo(Chat chat)
+    {
+        KeyboardProvider keyboardProvider = Bot.CreateSimpleKeyboard<Finalize>(_bot.Config.Texts.FinalizeButton);
+        return _bot.Config.Texts.InfoMessage.SendAsync(_bot, chat, keyboardProvider);
+    }
+
+    public Task FinalizeAsync(Chat chat)
     {
         KeyboardProvider keyboardProvider = CreateFinalizeKeyboard();
-        await _bot.Config.Texts.FinalMessage.SendAsync(_bot, chat, keyboardProvider);
+        return _bot.Config.Texts.FinalMessage.SendAsync(_bot, chat, keyboardProvider);
     }
 
     private Task SendPngAsync(Chat chat, byte[]? png, KeyboardProvider? keyboardProvider = null,

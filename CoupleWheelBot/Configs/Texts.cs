@@ -70,6 +70,12 @@ public class Texts : AbstractBot.Configs.Texts
     public MessageTemplate TableCaption { get; init; } = null!;
 
     [Required]
+    public string InfoButton { get; init; } = null!;
+
+    [Required]
+    public MessageTemplate InfoMessage { get; init; } = null!;
+
+    [Required]
     public string FinalizeButton { get; init; } = null!;
 
     [Required]
